@@ -18,4 +18,4 @@ Home Credit Default Risk Dataset (Kaggle)
 
 ##  Status
 -  EDA Completed
--  Model Building in Progress
+-  Model Building done.
