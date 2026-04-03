@@ -167,26 +167,6 @@ if submit:
         gauge={'axis': {'range': [0,100]}}
     ))
     st.plotly_chart(fig, use_container_width=True)
-    if SHAP_AVAILABLE:
-        try:
-            explainer = shap.TreeExplainer(model)
-            shap_values = explainer.shap_values(df)
-
-            if isinstance(shap_values, list):
-                shap_vals = shap_values[1][0]
-            else:
-                shap_vals = shap_values[0]
-
-            shap_df = pd.DataFrame({
-                "Feature": df.columns,
-                "Impact": shap_vals
-            }).sort_values("Impact", key=abs, ascending=False).head(8)
-
-            st.markdown("### Why this decision?")
-            st.dataframe(shap_df)
-
-        except:
-            st.info("SHAP not supported for this model")
 
 #Download the report
     result = pd.DataFrame({
