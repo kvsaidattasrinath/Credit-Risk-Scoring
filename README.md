@@ -30,7 +30,6 @@ To predict whether a customer is likely to default on a loan and support financi
   * ⚠️ REVIEW (Manual Underwriting)
   * ❌ REJECT
 * 📈 Interactive **Streamlit Web App**
-* 🔍 **SHAP Explainability** for model transparency
 * 📥 Downloadable loan assessment report
 
 ---
@@ -81,7 +80,6 @@ Key insights:
 * Pandas, NumPy
 * Scikit-learn
 * XGBoost
-* SHAP
 * Streamlit
 
 ---
@@ -99,7 +97,6 @@ This system helps financial institutions:
 
 ## 🖥️ Application Features
 
-* Clean **bank-style UI**
 * Real-time risk prediction
 * Credit score generation
 * Decision support system
