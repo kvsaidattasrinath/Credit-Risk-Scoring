@@ -1,12 +1,12 @@
-# 🏦 Credit Risk Scoring System
+#  Credit Risk Scoring System
 
-## 🚀 Live Demo
+##  Live Demo
 
 🔗 https://credit-risk-scoring-bysrinath.streamlit.app/
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 This project builds an end-to-end **Credit Risk Scoring System** that predicts the probability of loan default and assists in automated loan decision-making.
 
@@ -14,34 +14,34 @@ The system uses Machine Learning to estimate borrower risk and converts it into 
 
 ---
 
-## 🎯 Objective
+##  Objective
 
 To predict whether a customer is likely to default on a loan and support financial institutions in making **data-driven lending decisions**.
 
 ---
 
-## 🧠 Key Features
+##  Features
 
-* 📊 Predicts **Probability of Default (PD)**
-* 🔢 Converts risk into **Credit Score (300–900)**
-* 🏦 Provides decision:
+*  Predicts **Probability of Default (PD)**
+*  Converts risk into **Credit Score (300–900)**
+*  Provides decision:
 
-  * ✅ APPROVE
-  * ⚠️ REVIEW (Manual Underwriting)
-  * ❌ REJECT
-* 📈 Interactive **Streamlit Web App**
-* 📥 Downloadable loan assessment report
+  *  APPROVE
+  *  REVIEW (Manual Underwriting)
+  *  REJECT
+*  Interactive **Streamlit Web App**
+*  Downloadable loan assessment report
 
 ---
 
-## 🗂 Dataset
+##  Dataset
 
-* 📌 Home Credit Default Risk Dataset (Kaggle)
+*  Home Credit Default Risk Dataset (Kaggle)
 * Contains customer financial, demographic, and loan-related features
 
 ---
 
-## 🔍 Exploratory Data Analysis (EDA)
+##  Exploratory Data Analysis (EDA)
 
 Key insights:
 
@@ -53,7 +53,7 @@ Key insights:
 
 ---
 
-## ⚙️ Feature Engineering
+##  Feature Engineering
 
 * Credit-to-Income Ratio
 * Income-to-Credit Ratio
@@ -62,7 +62,7 @@ Key insights:
 
 ---
 
-## 🤖 Models Used
+##  Models Used
 
 | Model               | ROC-AUC Score             |
 | ------------------- | ------------------------- |
@@ -70,11 +70,11 @@ Key insights:
 | Random Forest       | 0.70                      |
 | XGBoost             | **0.74 (Selected Model)** |
 
-👉 XGBoost was selected due to best performance
+ XGBoost was selected due to best performance
 
 ---
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 * Python
 * Pandas, NumPy
@@ -84,7 +84,7 @@ Key insights:
 
 ---
 
-## 🏦 Business Impact
+##  Business Impact
 
 This system helps financial institutions:
 
@@ -95,7 +95,7 @@ This system helps financial institutions:
 
 ---
 
-## 🖥️ Application Features
+##  Application Features
 
 * Real-time risk prediction
 * Credit score generation
@@ -104,7 +104,7 @@ This system helps financial institutions:
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 
 ### 🔹 Input Page
 ![Input UI](screenshot1.png)
@@ -113,7 +113,7 @@ This system helps financial institutions:
 ![Results UI](screenshot2.png)
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 app.py
@@ -125,7 +125,7 @@ notebook.ipynb
 
 ---
 
-## 📌 Future Improvements
+##  Future Improvements
 
 * Integrate real credit bureau data (CIBIL-like scoring)
 * Improve model accuracy using advanced techniques
@@ -134,7 +134,7 @@ notebook.ipynb
 
 ---
 
-## 👨‍💻 Author
+##  Author
 
 **Sai Datta Srinath**
 
