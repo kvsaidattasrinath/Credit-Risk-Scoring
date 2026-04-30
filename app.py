@@ -10,6 +10,7 @@ st.set_page_config(page_title="Credit Risk Decision System", layout="wide")
 # Loading the model and column mapping
 @st.cache_resource
 def load_model():
+    # Ensure these files are in the same directory as app.py
     model = joblib.load("credit_risk_model.pkl")
     cols = list(joblib.load("model_columns.pkl"))
     return model, cols
@@ -29,7 +30,7 @@ st.markdown("""
 st.markdown("""
 <div class="header-card">
     <h1>🏦 Credit Risk Decision System</h1>
-    <p>Predictive analytics for loan default risk and creditworthiness.</p>
+    <p>Enterprise-grade predictive analytics for loan risk assessment.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -38,13 +39,22 @@ def safe_div(a, b):
     return a / b if b != 0 else 0
 
 def calculate_credit_score(prob):
+    """
+    Applies non-linear mapping: Score = max(300, 900 - (Probability * 1200))
+    """
     score = 900 - (prob * 1200)
     return int(max(300, score))
 
 def determine_risk_category(prob):
-    if prob < 0.07:
+    """
+    Strict Banking Thresholds:
+    - Low Risk: < 5% (Approve)
+    - Medium Risk: 5% - 10% (Review)
+    - High Risk: > 10% (Reject)
+    """
+    if prob < 0.05:
         return "Low", "APPROVE"
-    elif prob < 0.15:
+    elif prob < 0.10:
         return "Medium", "REVIEW"
     else:
         return "High", "REJECT"
@@ -76,7 +86,7 @@ if submit:
         st.error("Invalid Input: Years employed cannot exceed age.")
         st.stop()
 
-    # Feature Engineering
+    # Feature Engineering (Aligned with Training Script)
     annuity = (credit_amt / term_years) * 1.1 
     
     row = {
@@ -91,9 +101,9 @@ if submit:
         'ANNUITY_INCOME_RATIO': safe_div(annuity, income),
         'INCOME_CREDIT_RATIO': safe_div(income, credit_amt),
         'EMPLOYED_AGE_RATIO': safe_div(years_emp, age),
-        'EXT_SOURCE_1': 0.5, 
-        'EXT_SOURCE_2': 0.5, # Neutral baseline since manual input was removed
-        'EXT_SOURCE_3': 0.5,
+        'EXT_SOURCE_1': 0.35, # Conservative baseline for unverified applicants
+        'EXT_SOURCE_2': 0.35,
+        'EXT_SOURCE_3': 0.35,
     }
 
     # Dataframe Alignment
@@ -111,6 +121,7 @@ if submit:
     st.markdown("### Risk Assessment Results")
     
     res1, res2, res3 = st.columns(3)
+    # Fixed precision issue from image_0cde7f.png
     res1.metric("Default Probability", f"{prob*100:.2f}%")
     res2.metric("Calculated Credit Score", score)
     res3.metric("Decision Status", decision)
@@ -132,9 +143,9 @@ if submit:
             'axis': {'range': [0, 100], 'tickwidth': 1},
             'bar': {'color': "#1d4ed8"},
             'steps': [
-                {'range': [0, 7], 'color': "#065f46"},
-                {'range': [7, 15], 'color': "#92400e"},
-                {'range': [15, 100], 'color': "#991b1b"}
+                {'range': [0, 5], 'color': "#065f46"},
+                {'range': [5, 10], 'color': "#92400e"},
+                {'range': [10, 100], 'color': "#991b1b"}
             ],
             'threshold': {
                 'line': {'color': "white", 'width': 4},
