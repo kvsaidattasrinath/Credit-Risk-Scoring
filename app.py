@@ -38,18 +38,10 @@ def safe_div(a, b):
     return a / b if b != 0 else 0
 
 def calculate_credit_score(prob):
-    """
-    Non-linear mapping to penalize higher risks.
-    A 15% probability should not result in an 'Excellent' score.
-    """
     score = 900 - (prob * 1200)
     return int(max(300, score))
 
 def determine_risk_category(prob):
-    """
-    Standard banking thresholds:
-    Low Risk: < 7% | Medium Risk: 7-15% | High Risk: > 15%
-    """
     if prob < 0.07:
         return "Low", "APPROVE"
     elif prob < 0.15:
@@ -71,13 +63,11 @@ with st.form("loan_form"):
     with col1:
         income = st.number_input("Annual Income (₹)", min_value=0, value=500000)
         age = st.number_input("Age (Years)", min_value=18, max_value=100, value=30)
-        credit_history = st.slider("Credit History Health (EXT_SOURCE_2)", 0.0, 1.0, 0.5, 
-                                   help="Estimated score from external bureaus. 0.5 is neutral.")
 
     with col2:
         credit_amt = st.number_input("Requested Credit Amount (₹)", min_value=0, value=100000)
         years_emp = st.number_input("Years Employed", min_value=0, max_value=60, value=5)
-        term_years = st.selectbox("Loan Term", [1, 3, 5, 10, 15], index=1)
+        term_years = st.selectbox("Loan Term (Years)", [1, 3, 5, 10, 15], index=1)
 
     submit = st.form_submit_button("Run Risk Assessment")
 
@@ -86,8 +76,7 @@ if submit:
         st.error("Invalid Input: Years employed cannot exceed age.")
         st.stop()
 
-    # Feature Engineering (Matching training logic)
-    # Estimating annuity: Total Credit / Term + 10% Interest
+    # Feature Engineering
     annuity = (credit_amt / term_years) * 1.1 
     
     row = {
@@ -102,9 +91,9 @@ if submit:
         'ANNUITY_INCOME_RATIO': safe_div(annuity, income),
         'INCOME_CREDIT_RATIO': safe_div(income, credit_amt),
         'EMPLOYED_AGE_RATIO': safe_div(years_emp, age),
-        'EXT_SOURCE_1': 0.45, # Constants to avoid the 'median trap'
-        'EXT_SOURCE_2': credit_history,
-        'EXT_SOURCE_3': 0.45,
+        'EXT_SOURCE_1': 0.5, 
+        'EXT_SOURCE_2': 0.5, # Neutral baseline since manual input was removed
+        'EXT_SOURCE_3': 0.5,
     }
 
     # Dataframe Alignment
@@ -122,7 +111,7 @@ if submit:
     st.markdown("### Risk Assessment Results")
     
     res1, res2, res3 = st.columns(3)
-    res1.metric("Default Probability", f"{prob*100:.22f}%")
+    res1.metric("Default Probability", f"{prob*100:.2f}%")
     res2.metric("Calculated Credit Score", score)
     res3.metric("Decision Status", decision)
 
