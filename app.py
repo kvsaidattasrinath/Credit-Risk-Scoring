@@ -10,7 +10,6 @@ st.set_page_config(page_title="Credit Risk Decision System", layout="wide")
 # Loading the model and column mapping
 @st.cache_resource
 def load_model():
-    # Ensure these files are in the same directory as app.py
     model = joblib.load("credit_risk_model.pkl")
     cols = list(joblib.load("model_columns.pkl"))
     return model, cols
@@ -39,19 +38,10 @@ def safe_div(a, b):
     return a / b if b != 0 else 0
 
 def calculate_credit_score(prob):
-    """
-    Applies non-linear mapping: Score = max(300, 900 - (Probability * 1200))
-    """
     score = 900 - (prob * 1200)
     return int(max(300, score))
 
 def determine_risk_category(prob):
-    """
-    Strict Banking Thresholds:
-    - Low Risk: < 5% (Approve)
-    - Medium Risk: 5% - 10% (Review)
-    - High Risk: > 10% (Reject)
-    """
     if prob < 0.05:
         return "Low", "APPROVE"
     elif prob < 0.10:
@@ -71,22 +61,28 @@ with st.form("loan_form"):
     col1, col2 = st.columns(2)
     
     with col1:
-        income = st.number_input("Annual Income (₹)", min_value=0, value=500000)
-        age = st.number_input("Age (Years)", min_value=18, max_value=100, value=30)
+        # Setting value=None makes the fields start empty
+        income = st.number_input("Annual Income (₹)", min_value=0, value=None, placeholder="Enter annual income...")
+        age = st.number_input("Age (Years)", min_value=18, max_value=100, value=None, placeholder="Enter age...")
 
     with col2:
-        credit_amt = st.number_input("Requested Credit Amount (₹)", min_value=0, value=100000)
-        years_emp = st.number_input("Years Employed", min_value=0, max_value=60, value=5)
-        term_years = st.selectbox("Loan Term (Years)", [1, 3, 5, 10, 15], index=1)
+        credit_amt = st.number_input("Requested Credit Amount (₹)", min_value=0, value=None, placeholder="Enter loan amount...")
+        years_emp = st.number_input("Years Employed", min_value=0, max_value=60, value=None, placeholder="Enter years of experience...")
+        term_years = st.selectbox("Loan Term (Years)", [1, 3, 5, 10, 15], index=None, placeholder="Select term...")
 
     submit = st.form_submit_button("Run Risk Assessment")
 
 if submit:
+    # Validation to ensure no fields are empty
+    if any(v is None for v in [income, age, credit_amt, years_emp, term_years]):
+        st.error("Please fill in all the fields before assessing risk.")
+        st.stop()
+
     if years_emp > age:
         st.error("Invalid Input: Years employed cannot exceed age.")
         st.stop()
 
-    # Feature Engineering (Aligned with Training Script)
+    # Feature Engineering
     annuity = (credit_amt / term_years) * 1.1 
     
     row = {
@@ -101,7 +97,7 @@ if submit:
         'ANNUITY_INCOME_RATIO': safe_div(annuity, income),
         'INCOME_CREDIT_RATIO': safe_div(income, credit_amt),
         'EMPLOYED_AGE_RATIO': safe_div(years_emp, age),
-        'EXT_SOURCE_1': 0.35, # Conservative baseline for unverified applicants
+        'EXT_SOURCE_1': 0.35, 
         'EXT_SOURCE_2': 0.35,
         'EXT_SOURCE_3': 0.35,
     }
@@ -121,7 +117,6 @@ if submit:
     st.markdown("### Risk Assessment Results")
     
     res1, res2, res3 = st.columns(3)
-    # Fixed precision issue from image_0cde7f.png
     res1.metric("Default Probability", f"{prob*100:.2f}%")
     res2.metric("Calculated Credit Score", score)
     res3.metric("Decision Status", decision)
