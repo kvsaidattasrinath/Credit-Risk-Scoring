@@ -4,9 +4,10 @@ import numpy as np
 import joblib
 import plotly.graph_objects as go
 from io import BytesIO
-st.set_page_config(page_title="Credit Risk System", layout="wide")
 
-# Loading the model
+st.set_page_config(page_title="Credit Risk Decision System", layout="wide")
+
+# Loading the model and column mapping
 @st.cache_resource
 def load_model():
     model = joblib.load("credit_risk_model.pkl")
@@ -14,170 +15,154 @@ def load_model():
     return model, cols
 
 model, columns = load_model()
-# UI
+
+# Custom UI Styling
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(180deg, #020617 0%, #0b1a2b 100%);
-    color: #e6edf3;
-}
-.block-container {
-    padding-top: 1.5rem;
-    max-width: 1100px;
-}
-.header-card {
-    background: linear-gradient(135deg, #0b1f3a, #122a4a);
-    padding: 25px;
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.08);
-}
-.card {
-    background: #0f1e33;
-    padding: 18px;
-    border-radius: 15px;
-    border: 1px solid rgba(255,255,255,0.08);
-}
-.stButton>button {
-    background: linear-gradient(135deg, #1d4ed8, #2563eb);
-    color: white;
-    border-radius: 10px;
-    height: 45px;
-}
-section[data-testid="stSidebar"] {
-    background-color: #020617;
-}
+.stApp { background: linear-gradient(180deg, #020617 0%, #0b1a2b 100%); color: #e6edf3; }
+.header-card { background: linear-gradient(135deg, #0b1f3a, #122a4a); padding: 25px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px; }
+.stButton>button { background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; border-radius: 10px; width: 100%; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-#Header
+# Header
 st.markdown("""
 <div class="header-card">
     <h1>🏦 Credit Risk Decision System</h1>
-    <p>AI-powered loan approval & risk assessment</p>
+    <p>Predictive analytics for loan default risk and creditworthiness.</p>
 </div>
 """, unsafe_allow_html=True)
 
-#Reset
-def reset_fields():
-    for key in ["income", "credit", "age", "years"]:
-        st.session_state[key] = ""
+# Helper Functions
+def safe_div(a, b):
+    return a / b if b != 0 else 0
+
+def calculate_credit_score(prob):
+    """
+    Non-linear mapping to penalize higher risks.
+    A 15% probability should not result in an 'Excellent' score.
+    """
+    score = 900 - (prob * 1200)
+    return int(max(300, score))
+
+def determine_risk_category(prob):
+    """
+    Standard banking thresholds:
+    Low Risk: < 7% | Medium Risk: 7-15% | High Risk: > 15%
+    """
+    if prob < 0.07:
+        return "Low", "APPROVE"
+    elif prob < 0.15:
+        return "Medium", "REVIEW"
+    else:
+        return "High", "REJECT"
+
+# Sidebar Reset
+if st.sidebar.button("🔄 Reset Application"):
+    for key in st.session_state.keys():
+        del st.session_state[key]
     st.rerun()
 
-if st.sidebar.button("🔄 Reset"):
-    reset_fields()
-
-#Functions
-def parse(x, name):
-    if x == "":
-        st.error(f"{name} required")
-        st.stop()
-    return float(x)
-
-def safe_div(a,b):
-    return a/b if b!=0 else 0
-
-def credit_score(prob):
-    return int(900 - prob*600)
-
-def risk(prob):
-    if prob < 0.3:
-        return "Low", "APPROVE"
-    elif prob < 0.6:
-        return "Medium", "REVIEW"
-    return "High", "REJECT"
-
-#Inputs
-st.markdown("### Loan Application")
-
-with st.form("form"):
+# Application Form
+st.markdown("### Loan Application Details")
+with st.form("loan_form"):
     col1, col2 = st.columns(2)
-
+    
     with col1:
-        income = st.text_input("Annual Income (₹)", key="income")
-        age = st.text_input("Age", key="age")
+        income = st.number_input("Annual Income (₹)", min_value=0, value=500000)
+        age = st.number_input("Age (Years)", min_value=18, max_value=100, value=30)
+        credit_history = st.slider("Credit History Health (EXT_SOURCE_2)", 0.0, 1.0, 0.5, 
+                                   help="Estimated score from external bureaus. 0.5 is neutral.")
 
     with col2:
-        credit = st.text_input("Credit Amount (₹)", key="credit")
-        years = st.text_input("Years Employed", key="years")
+        credit_amt = st.number_input("Requested Credit Amount (₹)", min_value=0, value=100000)
+        years_emp = st.number_input("Years Employed", min_value=0, max_value=60, value=5)
+        term_years = st.selectbox("Loan Term", [1, 3, 5, 10, 15], index=1)
 
-    submit = st.form_submit_button("Assess Risk")
+    submit = st.form_submit_button("Run Risk Assessment")
 
-#Prediction
 if submit:
-
-    income = parse(income, "Income")
-    credit = parse(credit, "Credit")
-    age = int(parse(age, "Age"))
-    years = int(parse(years, "Years"))
-
-    if years > age:
-        st.error("Years employed cannot exceed age")
+    if years_emp > age:
+        st.error("Invalid Input: Years employed cannot exceed age.")
         st.stop()
 
-    ratio = safe_div(credit, income)
-
+    # Feature Engineering (Matching training logic)
+    # Estimating annuity: Total Credit / Term + 10% Interest
+    annuity = (credit_amt / term_years) * 1.1 
+    
     row = {
         'AMT_INCOME_TOTAL': income,
-        'AMT_CREDIT': credit,
-        'DAYS_BIRTH': -age*365,
-        'YEARS_EMPLOYED': years,
-        'CREDIT_INCOME_RATIO': ratio,
-        'EMPLOYED_AGE_RATIO': safe_div(years, age),
-        'INCOME_CREDIT_RATIO': safe_div(income, credit),
-        'EXT_SOURCE_1': 0.5,
-        'EXT_SOURCE_2': 0.5,
-        'EXT_SOURCE_3': 0.5,
+        'AMT_CREDIT': credit_amt,
+        'AMT_ANNUITY': annuity,
+        'DAYS_BIRTH': -age * 365,
+        'DAYS_EMPLOYED': -years_emp * 365,
+        'YEARS_EMPLOYED': years_emp,
+        'AGE': age,
+        'CREDIT_INCOME_RATIO': safe_div(credit_amt, income),
+        'ANNUITY_INCOME_RATIO': safe_div(annuity, income),
+        'INCOME_CREDIT_RATIO': safe_div(income, credit_amt),
+        'EMPLOYED_AGE_RATIO': safe_div(years_emp, age),
+        'EXT_SOURCE_1': 0.45, # Constants to avoid the 'median trap'
+        'EXT_SOURCE_2': credit_history,
+        'EXT_SOURCE_3': 0.45,
     }
 
-    df = pd.DataFrame([row])
-    df = pd.get_dummies(df)
-    df = df.reindex(columns=columns, fill_value=0)
+    # Dataframe Alignment
+    df_input = pd.DataFrame([row])
+    df_input = pd.get_dummies(df_input)
+    df_input = df_input.reindex(columns=columns, fill_value=0)
 
-    prob = model.predict_proba(df)[0][1]
-    score = credit_score(prob)
-    r, decision = risk(prob)
+    # Prediction
+    prob = model.predict_proba(df_input)[0][1]
+    score = calculate_credit_score(prob)
+    risk_level, decision = determine_risk_category(prob)
 
-#Outputs
-    st.markdown("### Results")
+    # Results Display
+    st.markdown("---")
+    st.markdown("### Risk Assessment Results")
+    
+    res1, res2, res3 = st.columns(3)
+    res1.metric("Default Probability", f"{prob*100:.22f}%")
+    res2.metric("Calculated Credit Score", score)
+    res3.metric("Decision Status", decision)
 
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.metric("Default Risk", f"{prob*100:.2f}%")
-
-    with c2:
-        st.metric("Credit Score", score)
-
-    with c3:
-        st.metric("Decision", decision)
-
-    # Decision Highlight
     if decision == "APPROVE":
-        st.success("✅ Loan Approved")
+        st.success(f"✅ Application Approved: This profile shows {risk_level} risk.")
     elif decision == "REVIEW":
-        st.warning("⚠ Needs Review")
+        st.warning(f"⚠ Manual Review Required: Profile shows {risk_level} risk.")
     else:
-        st.error("🚫 Loan Rejected")
+        st.error(f"🚫 Application Rejected: Profile shows {risk_level} risk.")
 
-# Gauge
+    # Visualization
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=prob*100,
-        title={'text': "Risk Level"},
-        gauge={'axis': {'range': [0,100]}}
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Risk Percentage", 'font': {'size': 24}},
+        gauge={
+            'axis': {'range': [0, 100], 'tickwidth': 1},
+            'bar': {'color': "#1d4ed8"},
+            'steps': [
+                {'range': [0, 7], 'color': "#065f46"},
+                {'range': [7, 15], 'color': "#92400e"},
+                {'range': [15, 100], 'color': "#991b1b"}
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': prob*100
+            }
+        }
     ))
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
     st.plotly_chart(fig, use_container_width=True)
 
-#Download the report
-    result = pd.DataFrame({
-        "Income":[income],
-        "Credit":[credit],
-        "Risk %":[prob*100],
-        "Score":[score],
-        "Decision":[decision]
-    })
-
+    # Export Logic
+    report_data = pd.DataFrame([row])
+    report_data['Risk_Prob'] = prob
+    report_data['Final_Score'] = score
+    report_data['Final_Decision'] = decision
+    
     buffer = BytesIO()
-    result.to_excel(buffer, index=False)
-
-    st.download_button("📥 Download Report", buffer, "credit_report.xlsx")
+    report_data.to_excel(buffer, index=False)
+    st.download_button("📥 Download Full Analysis (Excel)", buffer.getvalue(), "risk_report.xlsx")
