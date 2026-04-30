@@ -29,7 +29,7 @@ st.markdown("""
 # Header
 st.markdown("""
 <div class="header-card">
-    <h1>🏦 Credit Risk Decision System</h1>
+    <h1> Credit Risk Decision System</h1>
     <p>Enterprise-grade predictive analytics for loan risk assessment.</p>
 </div>
 """, unsafe_allow_html=True)
